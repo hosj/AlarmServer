@@ -1,0 +1,133 @@
+extends layout
+
+block content
+  .row
+    a.btn.btn-primary.pull-right( data-toggle="modal" data-target="#addModal") Add Sensor
+  .row
+    // BEGIN: Sensor List.
+    table.table.table-striped
+      thead
+        tr
+          th Zone
+          th Name
+          th Type
+          th GPIO #
+          th Pin
+          th Normal Status
+          th Current Status
+          th Enabled
+      tbody
+        tr(ng-repeat='sensor in sensors')
+          td {{sensor.zone}}
+          td 
+            a(ng-click='removeSensor( sensor )') {{sensor.name}}
+          td {{sensor.type}}
+          td {{sensor.GPIO}}
+          td {{sensor.pin}}
+          td {{sensor.normal}}
+          td {{sensor.current}}        
+          td 
+            a(ng-click='removeSensor( sensor )') {{sensor.enabled}}
+    // END: Sensor List.
+  .row
+    // BEGIN: Add sensor modal
+    #addModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='addModalLabel')
+      .modal-dialog(role='document')
+        .modal-content
+          .modal-header.modal-header-primary
+            button.close(type='button', data-dismiss='modal', aria-label='Close')
+              span(aria-hidden='true') &times;
+            |             
+            h4#addModalLabel.modal-title Add a sensor
+          |           
+          .modal-body
+            form
+              // ZONE
+              .form-group
+                a.pull-right(href='#', data-toggle="modal" data-target="#addZoneModal") Add
+                label.control-label(for='addZone') Zone:
+                |                 
+                select#addZone.form-control
+                  option(ng-repeat='zone in zones',value='{{zone.name}}') {{zone.name}}
+                  
+              // Type
+              .form-group
+                a.pull-right(href='#', data-toggle="modal" data-target="#addTypeModal") Add
+                label.control-label(for='addType') Sensor Type:
+                select#addType.form-control
+                  option(ng-repeat='type in types',value='{{type.name}}') {{type.name}}
+                  
+              // Name
+              .form-group
+                label.control-label(for='addName') Name:
+                input.form-control#addName(type='input')
+                
+              // Normal
+              .form-group
+                label.control-label(for='addNormal') Normal Output:
+                input.form-control#addNormal(type='input')
+                
+              // GPIO
+              .form-group
+                label.control-label(for='addGPIO') GPIO #:
+                input.form-control#addGPIO(type='input')
+                
+              // Enabled?
+              .form-group
+                label.control-label(for='addEnabled') Enabled:
+                | 
+                input#addEnabled(type='checkbox')
+
+          .modal-footer
+            button.btn.btn-default(type='button', data-dismiss='modal') Close
+            |             
+            button.btn.btn-primary(type='button', ng-click='addSensor()', data-dismiss='modal') Create Sensor
+
+    // BEGIN: Add Zone modal
+    #addZoneModal.modal(tabindex='-1', role='dialog', aria-labelledby='addZoneModalLabel')
+      .modal-dialog(role='document')
+        .modal-content
+          .modal-header.modal-header-danger
+            button.close(type='button', data-dismiss='modal', aria-label='Close')
+              span(aria-hidden='true') &times;
+            |             
+            h4#addZoneModalLabel.modal-title Add a zone
+          |           
+          .modal-body
+            form
+              // ZONE
+              .form-group
+                label.control-label(for='addZoneName') Zone Name:
+                |                 
+                input.form-control#addZoneName(type='text')
+          | 
+          .modal-footer
+            button.btn.btn-default(type='button', data-dismiss='modal') Cancel
+            |             
+            button.btn.btn-primary(type='button', ng-click='addZone()', data-dismiss='modal') Create Zone
+    // BEGIN: Add Type modal
+    #addTypeModal.modal(tabindex='-1', role='dialog', aria-labelledby='addTypeModalLabel')
+      .modal-dialog(role='document')
+        .modal-content
+          .modal-header.modal-header-danger
+            button.close(type='button', data-dismiss='modal', aria-label='Close')
+              span(aria-hidden='true') &times;
+            |             
+            h4#addTypeModalLabel.modal-title Add a type
+          |           
+          .modal-body
+            form
+              // ZONE
+              .form-group
+                label.control-label(for='addTypeName') Type Name:
+                |                 
+                input.form-control#addTypeName(type='text')
+          | 
+          .modal-footer
+            button.btn.btn-default(type='button', data-dismiss='modal') Cancel
+            |             
+            button.btn.btn-primary(type='button', ng-click='addType()', data-dismiss='modal') Create Type
+block javascripts
+  script(type='text/javascript', src='javascripts/sensors.js')
+
+  

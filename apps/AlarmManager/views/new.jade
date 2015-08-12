@@ -1,0 +1,30 @@
+extends layout
+
+block content
+  wizard(on-finish='writeNew()')
+    wz-step(title='Welcome')
+      h1 Welcome to your new alarm thing!!
+      |           
+      .well Let's go through and setup your system.
+      |           
+      input(type='submit', wz-next='', value='Continue')
+    |       
+    wz-step(title='Name')
+      h1 What do you want to call this system?
+      |           
+      input#name(placeholder='Short name')
+      |           
+      input(type='submit', wz-next='', value='Next')
+    |          
+    wz-step(title='Finish')
+      h1 Finish Up
+      p Are you sure all fields are correct?
+      |           
+      input(type='submit', wz-next='', value='Write DB')
+
+block javascripts
+  script(type='text/javascript', src='//cdnjs.cloudflare.com/ajax/libs/lodash.js/0.10.0/lodash.min.js')
+
+  script(type='text/javascript', src='http://cdn.jsdelivr.net/angular.wizard/latest/angular-wizard.min.js')
+  link(rel='stylesheet', type='text/css', href='http://cdn.jsdelivr.net/angular.wizard/latest/angular-wizard.min.css')
+  script(type='text/javascript', src='javascripts/new.js')

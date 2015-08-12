@@ -1,0 +1,111 @@
+extends layout
+
+block content
+  a.btn.btn-primary.btn-large(ng-click="shutdown()") Shutdown Server
+  a.btn.btn-primary.btn-large(ng-click="restart()") Restart Server
+  a.btn.btn-primary.btn-large(ng-click="reloaddb()") Reload DB
+  .panel.callout
+    .row
+      .col-lg-12
+        a.btn.btn-block(ng-controller='House',ng-click="toggle_arm()",ng-class='(armed) ? "btn-danger":(tripped>0) ? "btn-info":"btn-success"')
+          h2
+            | {{(armed) ? 'ARMED' : 'DISARMED'}}
+          h4
+            | {{(armed) ? 'READY TO DISARM' : (tripped>0) ? 'NOT READY TO ARM' : 'READY TO ARM'}}
+    .row &nbsp;
+    .row
+      // -------------------------------------------------------------------------------------------------------------------
+      // BEGIN: Windows
+      .col-lg-4
+        .alert(ng-controller='Windows',ng-class='(sensors==0) ? "alert-info":(down>0) ? "alert-danger":"alert-success"')
+          h2
+            a.btn.btn-default.pull-right(href='#', role='button', ng-click="toggle()",ng-show='(sensors>0)?true:false') Show &raquo;
+            | Windows
+          p {{(sensors>0) ? status : message_no_sensors}}
+          p &nbsp;
+          .well(ng-show='visible',ng-cloak)
+            table.table#tblWindows
+              thead
+                tr
+                  th Zone
+                  th Name
+                  th.text-center Status
+              tbody
+                tr(ng-repeat='window in windows')
+                  td
+                    | {{window.zone}}
+                  td
+                    | {{window.name}}
+                  td.text-center
+                    span.glyphicon(ng-class='(window.current==window.normal) ? "glyphicon-ok":(window.current==null) ? "glyphicon-question-sign":"glyphicon-remove"')
+      // END: Windows
+      // -------------------------------------------------------------------------------------------------------------------
+      // BEGIN: Doors
+      .col-lg-4
+        .alert(ng-controller='Doors',ng-class='(sensors==0) ? "alert-info":(down>0) ? "alert-danger":"alert-success"')
+          h2
+            a.btn.btn-default.pull-right(href='#', role='button', ng-click="toggle()",ng-show='(sensors>0)?true:false') Show &raquo;
+            | Doors
+          p {{(sensors>0) ? status : message_no_sensors}}
+          p &nbsp;
+          .well(ng-show='visible',ng-cloak)
+            table.table#tblDoors
+              thead
+                tr
+                  th Zone
+                  th Name
+                  th.text-center Status
+              tbody
+                tr(ng-repeat='door in doors')
+                  td
+                    | {{door.zone}}
+                  td
+                    | {{door.name}}
+                  td.text-center
+                    span.glyphicon(ng-class='(door.current==door.normal) ? "glyphicon-ok":(window.current==null) ? "glyphicon-question-sign":"glyphicon-remove"')
+                    
+      // END: Doors
+      // -------------------------------------------------------------------------------------------------------------------
+      // BEGIN: Garage            
+      .col-lg-4
+        .alert(ng-controller='Garage',ng-class='(sensors==0) ? "alert-info":(down>0) ? "alert-danger":"alert-success"')
+          h2
+            a.btn.btn-default.pull-right(href='#', role='button', ng-click="toggle()",ng-show='(sensors>0)?true:false') Show &raquo;
+            | Garage Door
+          p {{(sensors>0) ? status : message_no_sensors}}
+          p &nbsp;
+          .well(ng-show='visible',ng-cloak)
+            table.table#tblGarage
+              thead
+                tr
+                  th Zone
+                  th Name
+                  th.text-center Status
+              tbody
+                tr(ng-repeat='door in doors')
+                  td
+                    | {{door.zone}}
+                  td
+                    a(href="#",ng-if="door.opener",ng-click="showOpen(door)") {{door.name}}
+                    span(ng-if="!door.opener") {{door.name}}
+                  td.text-center
+                    span.glyphicon(ng-class='(door.current==door.normal) ? "glyphicon-ok":(window.current==null) ? "glyphicon-question-sign":"glyphicon-remove"')
+                  
+      // END: Garage
+    .row
+      .col-lg-8
+        .panel.panel-default
+          .panel-heading Recent
+          .panel-body
+            | logs
+      
+      .col-lg-4
+        .panel.panel-default
+          .panel-heading People
+          .panel-body
+            | Anyone with an ip should show up here
+      
+      
+
+block javascripts
+  script(type='text/javascript', src='javascripts/test.js')

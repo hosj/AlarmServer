@@ -1,0 +1,1 @@
+SET DEBUG=AlarmManager:* & npm start
