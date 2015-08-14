@@ -50,3 +50,4 @@ data/mongod.lock
 # settings file
 settings.json
 config.json
+apps/AlarmManager/package.json
