@@ -10,7 +10,7 @@
     "port" : 3306,
     "user" : "",
     "password" : "",
-    "name" : "house"
+    "dbname" : "house"
   }
 
 }
