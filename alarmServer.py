@@ -246,7 +246,6 @@ def send_mail(zone,name,status):
 			recipients.append(user[U_EMAIL])
 		if int(user[U_NOTIFY_PHONE]) == 1:
 			recipients.append(user[U_PHONE])
-		#msg = 'To:' + toaddrs + '\n' + 'From: ' + fromaddr + '\n' + 'Subject:Alarm - %s:%s:%s\n\n\n' % (zone,name,status)
 		if len(recipients) > 0:
 			msg = MIMEText('''
         Zone: %s
@@ -281,7 +280,7 @@ def log(str):
 # Writes to the log about a specific sensor
 def sensorlog(sid,str):
   db_open()
-  cur.execute("INSERT INTO log(sid,message) VALUES(%s,%s)",(sid,str))
+  cur.execute("INSERT INTO logs(sid,message,updatedAt) VALUES(%s,%s,%s)",(sid,str,datetime.datetime.now()))
   conn.commit()
 
 

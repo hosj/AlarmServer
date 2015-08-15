@@ -62,6 +62,28 @@ function socket(res,what){
   });
 }
 
+
+// GPIO
+router.route('/gpio')
+  /* GET all zones */
+  .get(function(req, res, next) {
+    models.GPIO.findAll().then(function(gpios) {
+      res.json(gpios);
+    });
+  })
+
+
+
+
+
+
+
+
+
+
+
+
+
 //  ########  #######  ##    ## ########  ######
 //       ##  ##     ## ###   ## ##       ##    ##
 //      ##   ##     ## ####  ## ##       ##
@@ -166,7 +188,7 @@ router.route('/sensors/:sensor_id')
     });
   })
   /* PUT update one sensor */
-  .put(function(req, res, next) {// use our bear model to find the bear we want
+  .put(function(req, res, next) {
     Sensor.findById(req.params.sensor_id, function(err, sensor) {
       if (err)
         res.send(err);
@@ -293,7 +315,7 @@ router.route('/garage/close/:id')
   });
 
 // Get all door sensors that are enabled
-router.route('/garagae/enabled')
+router.route('/garage/enabled')
   /* GET one sensor */
   .get(function(req, res, next) {
     models.Sensor.findAll({"enabled": true,"type":"overhead_door"}).then(function(err, sensors) {
@@ -406,6 +428,20 @@ router.route('/system/setup')
     name          : req.body.name
   }).then(res.json({message:""}));
 })
+
+
+
+
+
+
+// Logs
+  router.route('/logs')
+.get(function(req, res, next) {
+  res.json([{"sid":"1","message":"dksjfhsd","createdAt":"9090"}])
+})
+
+
+
 
 
 

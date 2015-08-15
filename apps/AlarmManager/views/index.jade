@@ -92,12 +92,25 @@ block content
                     span.glyphicon(ng-class='(door.current==door.normal) ? "glyphicon-ok":(window.current==null) ? "glyphicon-question-sign":"glyphicon-remove"')
                   
       // END: Garage
-    .row
+    .row(ng-controller='Log')
       .col-lg-8
         .panel.panel-default
           .panel-heading Recent
           .panel-body
-            | logs
+            table.table
+              thead
+                tr
+                  th Sensor
+                  th Message
+                  th Time
+              tbody
+                tr(ng-repeat='log in logs')
+                  td
+                    | {{log.sid}}
+                  td
+                    {{log.message}}
+                  td
+                    {{log.createdAt}}
       
       .col-lg-4
         .panel.panel-default

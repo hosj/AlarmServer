@@ -315,6 +315,22 @@ app.controller('House', function($scope,$http, mySharedService) {
 });
 
 
+// Log Controller
+app.controller('Log', function($scope,$http, mySharedService) {
+  $scope.logs = [];
+  $scope.getLogs = function() {
+    $http.get('api/logs').then(function(result) {
+      $scope.logs = result.data;
+    });
+  };
+
+  // Update windows on request
+  $scope.$on("handleBroadcast", function (event, args) {
+   $scope.getLogs();
+  });
+  // Get current logs
+  //$scope.getLogs();
+});
 
 
 

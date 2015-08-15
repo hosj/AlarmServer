@@ -1,0 +1,38 @@
+extends layout
+
+block content
+  .row
+    .col-lg-4
+      .panel.panel-default
+        .panel-heading GPIO
+        .panel-body
+          table.col-lg-6
+            tr(ng-repeat='pin in obj2')
+              td {{pin.sensor}}
+              td.desc
+                {{pin.desc}}
+              td.btn(class="btn-{{pin.color}}") {{pin.pin}}
+          table.col-lg-6
+            tr(ng-repeat='pin in obj3')
+              td.btn(class="btn-{{pin.color}}")  {{pin.pin}}
+              td.desc
+                {{pin.desc}}
+              td {{pin.sensor}}
+              
+          
+    .col-lg-4
+      .panel.panel-default
+        .panel-heading Buzzer
+        .panel-body
+          | Buzzer
+          
+    .col-lg-4
+      .panel.panel-default
+        .panel-heading Buzzer
+        .panel-body
+          | Buzzer
+    
+block javascripts
+  script(type='text/javascript', src='javascripts/settings.js')
+
+  
