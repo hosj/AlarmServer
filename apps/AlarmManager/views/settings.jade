@@ -2,35 +2,113 @@ extends layout
 
 block content
   .row
-    .col-lg-4
+    .col-lg-6
       .panel.panel-default
-        .panel-heading GPIO
+        .panel-heading 
+          h4 GPIO
         .panel-body
-          table.col-lg-6
-            tr(ng-repeat='pin in obj2')
-              td {{pin.sensor}}
-              td.desc
-                {{pin.desc}}
-              td.btn(class="btn-{{pin.color}}") {{pin.pin}}
-          table.col-lg-6
-            tr(ng-repeat='pin in obj3')
-              td.btn(class="btn-{{pin.color}}")  {{pin.pin}}
-              td.desc
-                {{pin.desc}}
-              td {{pin.sensor}}
+          .row.row-no-padding
+            .col-lg-6.no-padding
+              table.table
+                tr(ng-repeat='pin in obj2')
+                  td {{pin.sid}}
+                  td.desc
+                    {{pin.name}}
+                  td.pin(class="pin-{{pin.color}}") {{pin.pin}}
+            .col-lg-6.no-padding
+              table.table
+                tr(ng-repeat='pin in obj3')
+                  td.pin(class="pin-{{pin.color}}")  {{pin.pin}}
+                  td.desc
+                    {{pin.name}}
+                  td {{pin.sid}}
+    .col-lg-6
+      .row      
+        // Proximity arm      
+        .col-lg-6(ng-controller='Proximity')
+          .panel.panel-default
+            .panel-heading 
+              .btn-group.pull-right(data-toggle='buttons')
+                label.btn.btn-default.btn-sm(ng-class='{"active btn-success":state==1}', ng-click='setActive(1)')
+                  input(type='radio')
+                  | On
+                |            
+                label.btn.btn-default.btn-sm(ng-class='{"active btn-danger":state==0}', ng-click='setActive(0)')
+                  input(type='radio')
+                  | Off
+              h4 Proximity Arm
+              .clearfix
+            .panel-body
+              | {{ proximity_arm }}
+              | When turned on this will arm the system if the below people are not detected in the house.
+              | 
+              table.table.table-striped
+                thead
+                  tr
+                    th Person
+                    th Status
+                tbody
+                  tr
+                    td Josh
+                    td.pin-green
+                      span.glyphicon.glyphicon-home
+                      |  At Home
+                  tr
+                    td Trevva
+                    td.pin-red
+                      span.glyphicon.glyphicon-road
+                      |  Not Home
+            
+    
+        // Time arm      
+        .col-lg-6(ng-controller='Time')
+          .panel.panel-default
+            .panel-heading
+              .btn-group.pull-right(data-toggle='buttons')
+                label.btn.btn-default.btn-sm(ng-class='{"active btn-success":state==1}', ng-click='setActive(1)')
+                  input(type='radio')
+                  | On
+                |            
+                label.btn.btn-default.btn-sm(ng-class='{"active btn-danger":state==0}', ng-click='setActive(0)')
+                  input(type='radio')
+                  | Off
+              h4 Time Arm
+              .clearfix
+            
+            .panel-body
+              | When turned on this will arm and disarm the system at the below times.
+              .form-group
+                label(for='timeArm') Arm system at:
+                |     
+                input#timeArm.form-control(type='time', ng-model="arm")
+              .form-group
+                label(for='timeDisarm') Disarm system at:
+                |     
+                input#timeDisarm.form-control(type='time', ng-model="disarm")
+
+      .row      
+        // Buzzer arm      
+        .col-lg-6(ng-controller='Buzzer')
+          .panel.panel-default
+            .panel-heading
+              .btn-group.pull-right(data-toggle='buttons')
+                label.btn.btn-default.btn-sm(ng-class='{"active btn-success":state==1}', ng-click='setActive(1)')
+                  input(type='radio')
+                  | On
+                |            
+                label.btn.btn-default.btn-sm(ng-class='{"active btn-danger":state==0}', ng-click='setActive(0)')
+                  input(type='radio')
+                  | Off
+              h4 Buzzer
+              .clearfix
+            
+            .panel-body
+              | When turned on this will sound a buzzer when a sensor is tripped.
+              .form-group
+                label(for='buzzerPin') Pin:
+                |     
+                input#buzzerPin.form-control(type='text', ng-model="pin")
               
-          
-    .col-lg-4
-      .panel.panel-default
-        .panel-heading Buzzer
-        .panel-body
-          | Buzzer
-          
-    .col-lg-4
-      .panel.panel-default
-        .panel-heading Buzzer
-        .panel-body
-          | Buzzer
     
 block javascripts
   script(type='text/javascript', src='javascripts/settings.js')

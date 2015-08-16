@@ -2,11 +2,45 @@ body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
-
+.modal {
+    max-height: 90%;
+    overflow-y: auto;
+}
 a {
   color: #00B7FF;
 }
-.btn-black{
+.pin {
+  width: 2em;
+}
+.pin-orange{
+  background-color: #FFB30F;
+  color: #000000
+}
+.pin-pink{
+  background-color: #E3A587;
+  color: #000000
+}
+.pin-purple{
+  background-color: #8A4F7D;
+  color: #ffffff
+}
+.pin-green{
+  background-color: #51CB20;
+  color: #000000
+}
+.pin-blue{
+  background-color: #2708A0;
+  color: #ffffff
+}
+.pin-yellow{
+  background-color: #E9CE2C;
+  color: #000000
+}
+.pin-red{
+  background-color: #FD151B;
+  color: #000000
+}
+.pin-black{
   background-color: #000000;
   color: #ffffff
 }
@@ -72,4 +106,16 @@ td.desc{
     -moz-border-radius-topright: 5px;
      border-top-left-radius: 5px;
      border-top-right-radius: 5px;
+}
+
+.row-no-padding {
+  [class*="col-"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+.no-padding{
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+
 }

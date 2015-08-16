@@ -67,7 +67,7 @@ function socket(res,what){
 router.route('/gpio')
   /* GET all zones */
   .get(function(req, res, next) {
-    models.GPIO.findAll().then(function(gpios) {
+    models.GPIO.findAll({order: [['pin', 'ASC']]}).then(function(gpios) {
       res.json(gpios);
     });
   })
@@ -411,6 +411,38 @@ router.route('/system/reloaddb')
 .post(function(req, res, next) {
   socket(res,'reload');
 })
+
+router.route('/system/proximity')
+.post(function(req, res, next) {
+  console.log(req.body.data);
+  models.House.findOne().then(function(house) {
+    if (house) { // if the record exists in the db
+      house.updateAttributes({
+        proximity_arm: req.body.data
+      }).then(function() {
+        res.json({"message":"success"})
+      });
+    }else{
+      res.json({"message":"error"})
+    }
+  })
+})
+router.route('/system/time')
+.post(function(req, res, next) {
+  console.log(req.body.data);
+  models.House.findOne().then(function(house) {
+    if (house) { // if the record exists in the db
+      house.updateAttributes({
+        time_arm: req.body.data
+      }).then(function() {
+        res.json({"message":"success"})
+      });
+    }else{
+      res.json({"message":"error"})
+    }
+  })
+})
+
 //   ######  ##    ##  ######  ######## ######## ##     ##     ######  ######## ######## ##     ## ########
 //  ##    ##  ##  ##  ##    ##    ##    ##       ###   ###    ##    ## ##          ##    ##     ## ##     ##
 //  ##         ####   ##          ##    ##       #### ####    ##       ##          ##    ##     ## ##     ##
@@ -435,9 +467,18 @@ router.route('/system/setup')
 
 
 // Logs
-  router.route('/logs')
+router.route('/logs')
 .get(function(req, res, next) {
-  res.json([{"sid":"1","message":"dksjfhsd","createdAt":"9090"}])
+  models.Log.findAll(
+    {"order":[["id","DESC"]],"limit": 10}).then(function(logs){
+    res.json(logs);
+  });
+})
+.post(function(req, res, next) {
+  models.Log.findAll(
+    {"order":[["id","DESC"]],"limit": req.body.count}).then(function(logs){
+    res.json(logs);
+  });
 })
 
 

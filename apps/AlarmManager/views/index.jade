@@ -95,7 +95,9 @@ block content
     .row(ng-controller='Log')
       .col-lg-8
         .panel.panel-default
-          .panel-heading Recent
+          .panel-heading
+            a.btn.btn-default.btn-sm.pull-right(ng-click="show_all()") Show All Logs
+            h4 Recent
           .panel-body
             table.table
               thead
@@ -117,6 +119,8 @@ block content
           .panel-heading People
           .panel-body
             | Anyone with an ip should show up here
+      
+      
       
       
 

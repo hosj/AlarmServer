@@ -98,6 +98,8 @@ class AlarmMonitor(threading.Thread):
 				elif command == 'RELOAD':
 
 					db_open()
+
+					log('The server was reloaded')
 					# Load our sensors
 					load_sensors()
 
@@ -116,16 +118,24 @@ class AlarmMonitor(threading.Thread):
 					cur.execute('UPDATE houses SET armed=1')
 					conn.commit()
 					load_settings()
+					log('The System has been armed')
 					db_close()
 				elif command == 'DISARM':
 					db_open()
 					cur.execute('UPDATE houses SET armed=0')
 					conn.commit()
 					load_settings()
+					log('The System has been disarmed')
 					db_close()
 				elif command == 'OPEN':
+					db_open()
+					log('Something has been Opened')
+					db_close()
 					pass
 				elif command == 'CLOSE':
+					db_open()
+					log('Something has been Closed')
+					db_close()
 					pass
 				self.result_q.put('Done')
 
@@ -166,7 +176,6 @@ class AlarmMonitor(threading.Thread):
 						sensorlog(sensor['id'],status)
 
 						# Reload sensors
-
 						load_sensors()
 
 						# close DB
@@ -279,10 +288,13 @@ def log(str):
 
 # Writes to the log about a specific sensor
 def sensorlog(sid,str):
-  db_open()
-  cur.execute("INSERT INTO logs(sid,message,updatedAt) VALUES(%s,%s,%s)",(sid,str,datetime.datetime.now()))
+  cur.execute("INSERT INTO logs(sid,message,createdAt,updatedAt) VALUES(%s,%s,%s,%s)",(sid,str,datetime.datetime.utcnow(),datetime.datetime.utcnow()))
   conn.commit()
-
+  print('-----------------------------------------')
+  print(datetime.datetime.utcnow())
+  print(datetime.datetime.now())
+  print('-----------------------------------------')
+  print('-----------------------------------------')
 
 #        ##        #######     ###    ########      ######  ######## ##    ##  ######   #######  ########   ######
 #        ##       ##     ##   ## ##   ##     ##    ##    ## ##       ###   ## ##    ## ##     ## ##     ## ##    ##
@@ -353,6 +365,7 @@ def main(args):
 		sys.exit(0)
 
 
+
 	# Create a single input and a single output queue for all threads.
 	command_q = queue.Queue()
 	result_q = queue.Queue()
@@ -374,6 +387,9 @@ def main(args):
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.bind((host,port))
 	s.listen(backlog)
+	db_open()
+	log('The server is running')
+	db_close()
 	while 1:
 		client, address = s.accept()
 		data = client.recv(size)
@@ -382,6 +398,9 @@ def main(args):
 			line = data.decode()
 			# if command is shutdown
 			if line == 'shutdown':
+				db_open()
+				log('The server has been shutdown')
+				db_close()
 				# shutdown threads
 				for thread in pool:
 					thread.join()
@@ -391,6 +410,9 @@ def main(args):
 				break
 			# if command is shutdown
 			elif line == 'restart':
+				db_open()
+				log('The server has been restarted')
+				db_close()
 				# shutdown threads
 				for thread in pool:
 					thread.join()

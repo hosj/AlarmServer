@@ -1,4 +1,4 @@
-var app = angular.module('House', []);
+var app = angular.module('House', ['ui.bootstrap','angularMoment']);
 
 
 
@@ -167,7 +167,7 @@ app.controller('Windows', function($scope, $http) {
 // ===================================================================================================================================================
 // Garage Controller
 var door_open = '';
-app.controller('Garage', function($scope,$http) {
+app.controller('Garage', function($scope,$http,mySharedService) {
   $scope.visible = false;
   $scope.status = 'Fetching status';
   $scope.message_no_sensors = 'You have no Garage sensors';
@@ -202,6 +202,7 @@ app.controller('Garage', function($scope,$http) {
       $http.post('api/garage/open/' + id).then(function(result) {
         if ( result.data.message == ''){
           door_open.close();
+          mySharedService.prepForBroadcast('test');
         }else {
           BootstrapDialog.show({
             type: BootstrapDialog.TYPE_WARNING,
@@ -216,6 +217,7 @@ app.controller('Garage', function($scope,$http) {
       $http.post('api/garage/close/' + id).then(function(result) {
         if ( result.data.message == ''){
           door_open.close();
+          mySharedService.prepForBroadcast('test');
         }else {
           BootstrapDialog.show({
             type: BootstrapDialog.TYPE_WARNING,
@@ -295,7 +297,8 @@ app.controller('House', function($scope,$http, mySharedService) {
   $scope.toggle_arm = function() {
     $http.post('api/system/arm').then(function(result) {
       if ( result.data.message == ''){
-        $scope.getStatus()
+        $scope.getStatus();
+        mySharedService.prepForBroadcast('test');
       }else {
         //alert(result.data.message)
         //BootstrapDialog.alert(result.data.message);
@@ -307,16 +310,23 @@ app.controller('House', function($scope,$http, mySharedService) {
       }
 
     });
-    mySharedService.prepForBroadcast('test');
   };
 
   // Get current status
   $scope.getStatus();
 });
 
+app.controller('Log2', function($scope,$http,$modalInstance) {
+  $http.post('api/logs',{"count":40,"offset":0}).then(function(result) {
+    $scope.all_logs = result.data;
+  });
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
 
+});
 // Log Controller
-app.controller('Log', function($scope,$http, mySharedService) {
+app.controller('Log', function($scope,$http, mySharedService,$modal) {
   $scope.logs = [];
   $scope.getLogs = function() {
     $http.get('api/logs').then(function(result) {
@@ -324,12 +334,34 @@ app.controller('Log', function($scope,$http, mySharedService) {
     });
   };
 
+  // show all logs
+  $scope.all_logs = [];
+  $scope.show_all = function(){
+    var modalInstance = $modal.open({
+      animation: $scope.animationsEnabled,
+      templateUrl: 'templates/logs.html',
+      controller: 'Log2',
+      size: 'large',
+      resolve: {
+        items: function () {
+          return $scope.all_logs;
+        }
+      }
+    });
+
+    modalInstance.result.then(function (selectedItem) {
+      $scope.selected = selectedItem;
+    }, function () {
+      //$log.info('Modal dismissed at: ' + new Date());
+    });
+
+  };
   // Update windows on request
   $scope.$on("handleBroadcast", function (event, args) {
    $scope.getLogs();
   });
   // Get current logs
-  //$scope.getLogs();
+  $scope.getLogs();
 });
 
 

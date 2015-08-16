@@ -2,11 +2,12 @@
 
 module.exports = function(sequelize, DataTypes) {
   var GPIO = sequelize.define("GPIO", {
-    pin:      DataTypes.INTEGER,
-    desc:     DataTypes.STRING,
+    pin:     DataTypes.INTEGER,
+    gpio:    DataTypes.INTEGER,
+    name:    DataTypes.STRING,
+    alt:    DataTypes.STRING,
     sid:     DataTypes.INTEGER,
-    color:     DataTypes.STRING
+    color:   DataTypes.STRING 
   });
-
   return GPIO;
 };
