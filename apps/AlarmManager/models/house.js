@@ -7,7 +7,7 @@ module.exports = function(sequelize, DataTypes) {
     armed:                      DataTypes.BOOLEAN,
     buzzer:                     DataTypes.BOOLEAN,
     buzzer_pin:                 DataTypes.INTEGER,
-    buzzer_length:              DataTypes.INTEGER,
+    buzzer_length:              DataTypes.FLOAT,
     proximity_arm:              DataTypes.BOOLEAN,
     time_arm:                   DataTypes.BOOLEAN,
     time_arm_start:             DataTypes.STRING,

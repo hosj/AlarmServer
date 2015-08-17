@@ -346,34 +346,28 @@ router.route('/garage/enabled')
 router.route('/system')
   /* GET one sensor */
   .get(function(req, res, next) {
-    models.House.findOne().then(function(err, house) {
-      if (err)
-        res.send(err);
-      else
-        //req.models.Sensor.find({ $where : "this.current != this.normal" },function(err, sensors) {
-        models.Sensor.find().then(function(err, sensors) {
-          if (err)
-            res.send(err);
-          else
-            var d = JSON.parse(JSON.stringify(house[0]));
-            if ( d ){
-              d.tripped = sensors.length;
-              res.json(d);
-            }else{
-              res.json({})
-            }
-
+    // Get house
+    models.House.findOne().then(function(house) {
+      //load tripped sensors
+      models.Sensor.findAll({ where:  { normal : {$ne : models.Sequelize.col('current')} } }).then(function(sensors) {
+        var d = JSON.parse(JSON.stringify(house));
+        d.tripped = sensors.length;
+        // load users
+        models.User.findAll().then(function(users) {
+          d.users = users;
+          res.json(d);
+        });
       });
   });
 })
 
-//   ######  ##    ##  ######  ######## ######## ##     ##     ######   #######  ##    ## ######## ########   #######  ##
-//  ##    ##  ##  ##  ##    ##    ##    ##       ###   ###    ##    ## ##     ## ###   ##    ##    ##     ## ##     ## ##
-//  ##         ####   ##          ##    ##       #### ####    ##       ##     ## ####  ##    ##    ##     ## ##     ## ##
-//   ######     ##     ######     ##    ######   ## ### ##    ##       ##     ## ## ## ##    ##    ########  ##     ## ##
-//        ##    ##          ##    ##    ##       ##     ##    ##       ##     ## ##  ####    ##    ##   ##   ##     ## ##
-//  ##    ##    ##    ##    ##    ##    ##       ##     ##    ##    ## ##     ## ##   ###    ##    ##    ##  ##     ## ##
-//   ######     ##     ######     ##    ######## ##     ##     ######   #######  ##    ##    ##    ##     ##  #######  ########
+//   ######  ##    ##  ######  ######## ######## ##     ##       ###    ########  ##     ##
+//  ##    ##  ##  ##  ##    ##    ##    ##       ###   ###      ## ##   ##     ## ###   ###
+//  ##         ####   ##          ##    ##       #### ####     ##   ##  ##     ## #### ####
+//   ######     ##     ######     ##    ######   ## ### ##    ##     ## ########  ## ### ##
+//        ##    ##          ##    ##    ##       ##     ##    ######### ##   ##   ##     ##
+//  ##    ##    ##    ##    ##    ##    ##       ##     ##    ##     ## ##    ##  ##     ##
+//   ######     ##     ######     ##    ######## ##     ##    ##     ## ##     ## ##     ##
 /*========================================================================================================================================
       System Control
 */
@@ -399,42 +393,112 @@ router.route('/system/arm')
       }
     });
 })
+//   ######  ##     ## ##     ## ######## ########   #######  ##      ## ##    ##
+//  ##    ## ##     ## ##     ##    ##    ##     ## ##     ## ##  ##  ## ###   ##
+//  ##       ##     ## ##     ##    ##    ##     ## ##     ## ##  ##  ## ####  ##
+//   ######  ######### ##     ##    ##    ##     ## ##     ## ##  ##  ## ## ## ##
+//        ## ##     ## ##     ##    ##    ##     ## ##     ## ##  ##  ## ##  ####
+//  ##    ## ##     ## ##     ##    ##    ##     ## ##     ## ##  ##  ## ##   ###
+//   ######  ##     ##  #######     ##    ########   #######   ###  ###  ##    ##
 router.route('/system/shutdown')
 .post(function(req, res, next) {
   socket(res,'shutdown');
 })
+//  ########  ########  ######  ########    ###    ########  ########
+//  ##     ## ##       ##    ##    ##      ## ##   ##     ##    ##
+//  ##     ## ##       ##          ##     ##   ##  ##     ##    ##
+//  ########  ######    ######     ##    ##     ## ########     ##
+//  ##   ##   ##             ##    ##    ######### ##   ##      ##
+//  ##    ##  ##       ##    ##    ##    ##     ## ##    ##     ##
+//  ##     ## ########  ######     ##    ##     ## ##     ##    ##
 router.route('/system/restart')
 .post(function(req, res, next) {
   socket(res,'restart');
 })
+//  ########  ######## ##        #######     ###    ########     ########  ########
+//  ##     ## ##       ##       ##     ##   ## ##   ##     ##    ##     ## ##     ##
+//  ##     ## ##       ##       ##     ##  ##   ##  ##     ##    ##     ## ##     ##
+//  ########  ######   ##       ##     ## ##     ## ##     ##    ##     ## ########
+//  ##   ##   ##       ##       ##     ## ######### ##     ##    ##     ## ##     ##
+//  ##    ##  ##       ##       ##     ## ##     ## ##     ##    ##     ## ##     ##
+//  ##     ## ######## ########  #######  ##     ## ########     ########  ########
 router.route('/system/reloaddb')
 .post(function(req, res, next) {
   socket(res,'reload');
 })
 
-router.route('/system/proximity')
+
+//   ######  ##    ##  ######  ######## ######## ##     ##     ######  ######## ########
+//  ##    ##  ##  ##  ##    ##    ##    ##       ###   ###    ##    ## ##          ##
+//  ##         ####   ##          ##    ##       #### ####    ##       ##          ##
+//   ######     ##     ######     ##    ######   ## ### ##     ######  ######      ##
+//        ##    ##          ##    ##    ##       ##     ##          ## ##          ##
+//  ##    ##    ##    ##    ##    ##    ##       ##     ##    ##    ## ##          ##
+//   ######     ##     ######     ##    ######## ##     ##     ######  ########    ##
+router.route('/system/set')
 .post(function(req, res, next) {
-  console.log(req.body.data);
   models.House.findOne().then(function(house) {
     if (house) { // if the record exists in the db
-      house.updateAttributes({
-        proximity_arm: req.body.data
-      }).then(function() {
-        res.json({"message":"success"})
-      });
-    }else{
-      res.json({"message":"error"})
-    }
-  })
-})
-router.route('/system/time')
-.post(function(req, res, next) {
-  console.log(req.body.data);
-  models.House.findOne().then(function(house) {
-    if (house) { // if the record exists in the db
-      house.updateAttributes({
-        time_arm: req.body.data
-      }).then(function() {
+      attr = {};
+      // These are hard coded so nobody can use this to set anything they want to whatever they want.
+      switch (req.body.key){
+
+        // Enable/Disable Status Lights
+        case 'lights':
+          attr['status_light'] = req.body.value
+          break;
+
+        // Sets the armed status light pin
+        case 'armed_pin':
+          attr['status_light_armed_pin'] = req.body.value
+          break;
+
+        // Sets the disarmed status light pin
+        case 'disarmed_pin':
+          attr['status_light_disarmed_pin'] = req.body.value
+          break;
+
+        // Enable/Disable Buzzer
+        case 'buzzer':
+          attr['buzzer'] = req.body.value
+          break;
+
+        // Sets the buzzer pin
+        case 'buzzer_pin':
+          attr['buzzer_pin'] = req.body.value
+          break;
+
+        // Sets the buzzer length in seconds
+        case 'buzzer_length':
+          attr['buzzer_length'] = req.body.value
+          break;
+
+        // Enable/Disable Time Arm
+        case 'time':
+          attr['time_arm'] = req.body.value
+          break;
+
+        // Sets the time when the system auto arms
+        case 'arm_time':
+          attr['time_arm_start'] = req.body.value
+          break;
+
+        //  Sets the time when the system auto disarms
+        case 'disarm_time':
+          attr['time_arm_end'] = req.body.value
+          break;
+
+        // Enable/Disable Proximity Arm
+        case 'proximity':
+          attr['proximity_arm'] = req.body.value
+          break;
+
+        default:
+          res.json({"message":"error"})
+          return;
+      }
+
+      house.updateAttributes(attr).then(function() {
         res.json({"message":"success"})
       });
     }else{

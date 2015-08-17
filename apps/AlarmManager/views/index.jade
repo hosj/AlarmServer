@@ -112,11 +112,12 @@ block content
                   td
                     {{log.message}}
                   td
-                    {{log.createdAt}}
+                    {{ log.createdAt | amCalendar }}
       
       .col-lg-4
         .panel.panel-default
-          .panel-heading People
+          .panel-heading
+            h4 People
           .panel-body
             | Anyone with an ip should show up here
       

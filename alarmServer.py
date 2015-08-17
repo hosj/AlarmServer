@@ -192,6 +192,57 @@ class AlarmMonitor(threading.Thread):
 		super(AlarmMonitor, self).join(timeout)
 
 
+#  ########  ########   #######  ##     ## #### ##     ## #### ######## ##    ##
+#  ##     ## ##     ## ##     ##  ##   ##   ##  ###   ###  ##     ##     ##  ##
+#  ##     ## ##     ## ##     ##   ## ##    ##  #### ####  ##     ##      ####
+#  ########  ########  ##     ##    ###     ##  ## ### ##  ##     ##       ##
+#  ##        ##   ##   ##     ##   ## ##    ##  ##     ##  ##     ##       ##
+#  ##        ##    ##  ##     ##  ##   ##   ##  ##     ##  ##     ##       ##
+#  ##        ##     ##  #######  ##     ## #### ##     ## ####    ##       ##
+class ProximityMonitor(threading.Thread):
+
+	def __init__(self, command_q, result_q):
+		super(ProximityMonitor, self).__init__()
+		self.command_q = command_q
+		self.result_q = result_q
+		self.stoprequest = threading.Event()
+		print('proximity--------------------------------')
+		# open db
+		#db_open()
+
+		# Get ips
+
+		# close db
+		#db_close()
+
+	def run(self):
+		while not self.stoprequest.isSet():
+			# Check if we were asked to do anything
+			try:
+				com = str(self.command_q.get(True, 0.05)).split('|')
+				command = com[0].upper()
+				try:
+					arg = com[1]
+				except:
+					arg = ''
+				if command == '':
+					pass
+				elif command == 'RELOAD':
+					pass
+				self.result_q.put('Done')
+
+			# nothing in queue continue on as normal
+			except queue.Empty:
+				pass
+
+			#iterate through all ips
+			#for sensor in sensors:
+
+	def join(self, timeout=None):
+		self.stoprequest.set()
+		super(ProximityMonitor, self).join(timeout)
+
+
 
 #        ########  ########           #######  ########  ######## ##    ##
 #        ##     ## ##     ##         ##     ## ##     ## ##       ###   ##
@@ -290,11 +341,7 @@ def log(str):
 def sensorlog(sid,str):
   cur.execute("INSERT INTO logs(sid,message,createdAt,updatedAt) VALUES(%s,%s,%s,%s)",(sid,str,datetime.datetime.utcnow(),datetime.datetime.utcnow()))
   conn.commit()
-  print('-----------------------------------------')
-  print(datetime.datetime.utcnow())
-  print(datetime.datetime.now())
-  print('-----------------------------------------')
-  print('-----------------------------------------')
+
 
 #        ##        #######     ###    ########      ######  ######## ##    ##  ######   #######  ########   ######
 #        ##       ##     ##   ## ##   ##     ##    ##    ## ##       ###   ## ##    ## ##     ## ##     ## ##    ##
@@ -343,7 +390,7 @@ def load_settings():
 # Setup the pi
 def setup_system():
 	for sensor in sensors:
-		print(sensor['name'])
+		pass
 
 
 #        ##     ##    ###    #### ##    ##
@@ -364,18 +411,36 @@ def main(args):
 		print('Copy settings.example.json to settings.json and add your info to it')
 		sys.exit(0)
 
+	# load house settings
+	db_open()
+	load_settings()
+	db_close()
 
-
-	# Create a single input and a single output queue for all threads.
+	# Create a single input and a single output queue for all alarm monitor threads.
 	command_q = queue.Queue()
 	result_q = queue.Queue()
+	# Create a single input and a single output queue for all proximity monitor threads.
+	proximity_command_q = queue.Queue()
+	proximity_result_q = queue.Queue()
 
-	# Create the "thread pool" - we only have 1 right now
+	# Alarm monitor pool
 	pool = [AlarmMonitor(command_q=command_q, result_q=result_q) for i in range(1)]
 
-	# Start all threads
+	# Proximity monitor pool
+	if settings['proximity_arm'] == 1:
+		proximity_pool = [ProximityMonitor(command_q=proximity_command_q, result_q=proximity_result_q) for i in range(1)]
+	else:
+		proximity_pool = []
+
+	# Start all alarm monitor threads
 	for thread in pool:
 		thread.start()
+
+	# Start all proximity monitor threads
+	for thread in proximity_pool:
+		thread.start()
+
+
 
 	# socket server!!
 	import socket
@@ -404,6 +469,9 @@ def main(args):
 				# shutdown threads
 				for thread in pool:
 					thread.join()
+				# shutdown threads
+				for thread in proximity_pool:
+					thread.join()
 				# shutdown application
 				client.send('SUCCESS'.encode())
 				client.close()
@@ -416,13 +484,23 @@ def main(args):
 				# shutdown threads
 				for thread in pool:
 					thread.join()
+				# shutdown threads
+				for thread in proximity_pool:
+					thread.join()
 				# shutdown application
 				client.send('SUCCESS'.encode())
 				client.close()
 				with open('restart.txt','w') as f:
 					f.write('ss')
 				break
-
+			# is this a proximity
+			elif line[0:4] == 'PROX':
+				cmd = line.split('|')
+				try:
+					if cmd[1] == '':
+						pass
+				except:
+					pass
 			# not shutdown add to queue
 			else:
 				command_q.put(line)

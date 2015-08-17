@@ -48,14 +48,12 @@ block content
                     th Person
                     th Status
                 tbody
-                  tr
-                    td Josh
-                    td.pin-green
+                  tr(ng-repeat='user in users')
+                    td {{user.name}}
+                    td.pin-green(ng-if='user.location')
                       span.glyphicon.glyphicon-home
                       |  At Home
-                  tr
-                    td Trevva
-                    td.pin-red
+                    td.pin-red(ng-if='!user.location')
                       span.glyphicon.glyphicon-road
                       |  Not Home
             
@@ -80,11 +78,11 @@ block content
               .form-group
                 label(for='timeArm') Arm system at:
                 |     
-                input#timeArm.form-control(type='time', ng-model="arm")
+                input#timeArm.form-control(type='time', ng-model="arm.value", ng-class='{"pin-red":arm.db!=arm.value}', ng-blur='send_time(arm)')
               .form-group
                 label(for='timeDisarm') Disarm system at:
                 |     
-                input#timeDisarm.form-control(type='time', ng-model="disarm")
+                input#timeDisarm.form-control(type='time', ng-model="disarm.value", ng-class='{"pin-red":disarm.db!=disarm.value}', ng-blur='send_time(disarm)')
 
       .row      
         // Buzzer arm      
@@ -106,8 +104,34 @@ block content
               | When turned on this will sound a buzzer when a sensor is tripped.
               .form-group
                 label(for='buzzerPin') Pin:
-                |     
-                input#buzzerPin.form-control(type='text', ng-model="pin")
+                input#buzzerPin.form-control(type='text', ng-model="pin.value", ng-class='{"pin-red":pin.db!=pin.value}',ng-blur='send_buzzer(pin)')
+              .form-group
+                label(for='buzzerLength') Length:
+                input#buzzerLength.form-control(type='text', ng-model="length.value", placeholder="in seconds", ng-class='{"pin-red":length.db!=length.value}',ng-blur='send_buzzer(length)')
+   
+        // Lights arm      
+        .col-lg-6(ng-controller='Lights')
+          .panel.panel-default
+            .panel-heading
+              .btn-group.pull-right(data-toggle='buttons')
+                label.btn.btn-default.btn-sm(ng-class='{"active btn-success":state==1}', ng-click='setActive(1)')
+                  input(type='radio')
+                  | On
+                |            
+                label.btn.btn-default.btn-sm(ng-class='{"active btn-danger":state==0}', ng-click='setActive(0)')
+                  input(type='radio')
+                  | Off
+              h4 Status Lights
+              .clearfix
+            
+            .panel-body
+              | When turned on this will alternate between the two leds
+              .form-group
+                label(for='armedPin') Armed Pin:
+                input#armedPin.form-control(type='text', ng-class='{"pin-red":armed.db!=armed.value}', ng-model="armed.value", ng-blur="send_armed(armed.value)")
+              .form-group
+                label(for='disarmedPin') Disarmed Pin:
+                input#disarmedPin.form-control(type='text', ng-class='{"pin-red":disarmed.db!=disarmed.value}', ng-model="disarmed.value", ng-blur="send_disarmed(disarmed.value)")
               
     
 block javascripts
