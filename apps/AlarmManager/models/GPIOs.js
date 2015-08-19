@@ -7,7 +7,7 @@ module.exports = function(sequelize, DataTypes) {
     name:    DataTypes.STRING,
     alt:    DataTypes.STRING,
     sid:     DataTypes.INTEGER,
-    color:   DataTypes.STRING 
+    color:   DataTypes.STRING
   });
   return GPIO;
 };

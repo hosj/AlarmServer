@@ -206,7 +206,7 @@ class ProximityMonitor(threading.Thread):
 		self.command_q = command_q
 		self.result_q = result_q
 		self.stoprequest = threading.Event()
-		print('proximity--------------------------------')
+		print('proximity started')
 		# open db
 		#db_open()
 
@@ -234,12 +234,15 @@ class ProximityMonitor(threading.Thread):
 			# nothing in queue continue on as normal
 			except queue.Empty:
 				pass
+			print('proximity running')
+			time.sleep(10)
 
 			#iterate through all ips
 			#for sensor in sensors:
 
 	def join(self, timeout=None):
 		self.stoprequest.set()
+		print('Proximity Stop')
 		super(ProximityMonitor, self).join(timeout)
 
 
@@ -497,8 +500,29 @@ def main(args):
 			elif line[0:4] == 'PROX':
 				cmd = line.split('|')
 				try:
-					if cmd[1] == '':
-						pass
+					if cmd[1] == 'shutdown':
+						db_open()
+						cur.execute("UPDATE houses SET proximity_arm = 0")
+						conn.commit()
+						load_settings()
+						db_close()
+						for thread in proximity_pool:
+							thread.join()
+						client.send('SUCCESS'.encode())
+
+					elif cmd[1] == 'start':
+						if len(proximity_pool) == 0:
+							proximity_pool = [ProximityMonitor(command_q=proximity_command_q, result_q=proximity_result_q) for i in range(1)]
+							for thread in proximity_pool:
+								thread.start()
+							db_open()
+							cur.execute("UPDATE houses SET proximity_arm = 0")
+							conn.commit()
+							load_settings()
+							db_close()
+							client.send('SUCCESS'.encode())
+						else:
+							client.send('FAILED'.encode())
 				except:
 					pass
 			# not shutdown add to queue
