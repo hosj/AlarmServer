@@ -43,6 +43,14 @@ settings = {}
 # script settings
 script_settings = {}
 
+# Alarm Thread
+alarm_thread = None
+
+# Proximity Thread
+proximity_thread = None
+
+# Time Thread
+time_thread = None
 
 #           ###    ##          ###    ########  ##     ##    ##     ##  #######  ##    ## #### ########  #######  ########
 #          ## ##   ##         ## ##   ##     ## ###   ###    ###   ### ##     ## ###   ##  ##     ##    ##     ## ##     ##
@@ -93,6 +101,8 @@ class AlarmMonitor(threading.Thread):
 					arg = com[1]
 				except:
 					arg = ''
+
+
 				if command == '':
 					pass
 				elif command == 'RELOAD':
@@ -206,6 +216,7 @@ class ProximityMonitor(threading.Thread):
 		self.command_q = command_q
 		self.result_q = result_q
 		self.stoprequest = threading.Event()
+		self.startdt = datetime.datetime.now()
 		print('proximity started')
 		# open db
 		#db_open()
@@ -234,7 +245,14 @@ class ProximityMonitor(threading.Thread):
 			# nothing in queue continue on as normal
 			except queue.Empty:
 				pass
-			print('proximity running')
+			delta = datetime.datetime.now() - self.startdt
+
+
+			if delta.seconds > 60:
+				self.startdt = datetime.datetime.now()
+				print('Checking for ips')
+				for user in users:
+					print(user['ip'])
 
 			#iterate through all ips
 			#for sensor in sensors:
@@ -394,6 +412,57 @@ def setup_system():
 	for sensor in sensors:
 		pass
 
+def g_shutdown():
+	db_open()
+	log('The server has been shutdown')
+	db_close()
+	# shutdown threads
+	if proximity_thread != None:
+		proximity_thread.join()
+	alarm_thread.join()
+	return 'SUCCESS'
+
+def g_restart():
+	db_open()
+	log('The server has been restarted')
+	db_close()
+	# shutdown threads
+	if proximity_thread != None:
+		proximity_thread.join()
+	alarm_thread.join()
+	# write the restart file, this is only used in testing and then only by start.ps1
+	with open('restart.txt','w') as f:
+		f.write('ss')
+	return 'SUCCESS'
+
+def g_proximity_start():
+	global proximity_thread
+	if proximity_thread == None:
+		proximity_thread = ProximityMonitor(command_q=proximity_command_q, result_q=proximity_result_q)
+		proximity_thread.start()
+		db_open()
+		cur.execute("UPDATE houses SET proximity_arm = 1")
+		conn.commit()
+		load_settings()
+		db_close()
+		return 'SUCCESS'
+	else:
+		return 'ALREADY RUNNING'
+
+def g_proximity_shutdown():
+	global proximity_thread
+	if proximity_thread != None:
+		db_open()
+		cur.execute("UPDATE houses SET proximity_arm = 0")
+		conn.commit()
+		load_settings()
+		db_close()
+		proximity_thread.join()
+		proximity_thread = None
+		return 'SUCCESS'
+	else:
+		return 'NOT RUNNING'
+
 
 #        ##     ##    ###    #### ##    ##
 #        ###   ###   ## ##    ##  ###   ##
@@ -403,7 +472,7 @@ def setup_system():
 #        ##     ## ##     ##  ##  ##   ###
 #        ##     ## ##     ## #### ##    ##
 def main(args):
-
+	global alarm_thread, proximity_thread, time_thread
 	# Load script settings
 	global script_settings
 	if os.path.exists('settings.json'):
@@ -425,24 +494,16 @@ def main(args):
 	proximity_command_q = queue.Queue()
 	proximity_result_q = queue.Queue()
 
-	# Alarm monitor pool
-	pool = [AlarmMonitor(command_q=command_q, result_q=result_q) for i in range(1)]
+	# Alarm monitor thread
+	alarm_thread = AlarmMonitor(command_q=command_q, result_q=result_q)
+	alarm_thread.start()
 
-	# Proximity monitor pool
-	if settings['proximity_arm'] == 1:
-		proximity_pool = [ProximityMonitor(command_q=proximity_command_q, result_q=proximity_result_q) for i in range(1)]
+	# Proximity monitor thread | dont start if system is already armed
+	if settings['proximity_arm'] == 1 and settings['armed'] == 0:
+		proximity_thread = ProximityMonitor(command_q=proximity_command_q, result_q=proximity_result_q)
+		proximity_thread.start()
 	else:
-		proximity_pool = []
-
-	# Start all alarm monitor threads
-	for thread in pool:
-		thread.start()
-
-	# Start all proximity monitor threads
-	for thread in proximity_pool:
-		thread.start()
-
-
+		proximity_thread = None
 
 	# socket server!!
 	import socket
@@ -461,75 +522,16 @@ def main(args):
 		client, address = s.accept()
 		data = client.recv(size)
 
+		# do something with the data we received
 		if data:
 			line = data.decode()
-			# if command is shutdown
-			if line == 'shutdown':
-				db_open()
-				log('The server has been shutdown')
-				db_close()
-				# shutdown threads
-				for thread in pool:
-					thread.join()
-				# shutdown threads
-				for thread in proximity_pool:
-					thread.join()
-				# shutdown application
-				client.send('SUCCESS'.encode())
-				client.close()
-				break
-			# if command is shutdown
-			elif line == 'restart':
-				db_open()
-				log('The server has been restarted')
-				db_close()
-				# shutdown threads
-				for thread in pool:
-					thread.join()
-				# shutdown threads
-				for thread in proximity_pool:
-					thread.join()
-				# shutdown application
-				client.send('SUCCESS'.encode())
-				client.close()
-				with open('restart.txt','w') as f:
-					f.write('ss')
-				break
-			# is this a proximity
-			elif line[0:4] == 'PROX':
-				cmd = line.split('|')
-				try:
-					if cmd[1] == 'shutdown':
-						db_open()
-						cur.execute("UPDATE houses SET proximity_arm = 0")
-						conn.commit()
-						load_settings()
-						db_close()
-						for thread in proximity_pool:
-							thread.join()
-						proximity_pool = []
-						client.send('SUCCESS'.encode())
-
-					elif cmd[1] == 'start':
-						if len(proximity_pool) == 0:
-							proximity_pool = [ProximityMonitor(command_q=proximity_command_q, result_q=proximity_result_q) for i in range(1)]
-							for thread in proximity_pool:
-								thread.start()
-							db_open()
-							cur.execute("UPDATE houses SET proximity_arm = 1")
-							conn.commit()
-							load_settings()
-							db_close()
-							client.send('SUCCESS'.encode())
-						else:
-							client.send('FAILED'.encode())
-				except:
-					pass
-			# not shutdown add to queue
-			else:
+			try:
+				response = globals()['g_%s' % line]()
+			except:
+				print('No Function named %s' % line)
 				command_q.put(line)
-				result = result_q.get()
-				client.send('SUCCESS'.encode())
+				response = result_q.get()
+			client.send(response.encode())
 		client.close()
 	s.close()
 
