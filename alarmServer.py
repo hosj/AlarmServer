@@ -235,7 +235,6 @@ class ProximityMonitor(threading.Thread):
 			except queue.Empty:
 				pass
 			print('proximity running')
-			time.sleep(10)
 
 			#iterate through all ips
 			#for sensor in sensors:
@@ -508,6 +507,7 @@ def main(args):
 						db_close()
 						for thread in proximity_pool:
 							thread.join()
+						proximity_pool = []
 						client.send('SUCCESS'.encode())
 
 					elif cmd[1] == 'start':
@@ -516,7 +516,7 @@ def main(args):
 							for thread in proximity_pool:
 								thread.start()
 							db_open()
-							cur.execute("UPDATE houses SET proximity_arm = 0")
+							cur.execute("UPDATE houses SET proximity_arm = 1")
 							conn.commit()
 							load_settings()
 							db_close()

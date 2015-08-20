@@ -490,7 +490,12 @@ router.route('/system/set')
 
         // Enable/Disable Proximity Arm
         case 'proximity':
-          attr['proximity_arm'] = req.body.value
+          if ( req.body.value == 0 ){
+            socket(res,'PROX|shutdown');
+          }else{
+            socket(res,'PROX|start');
+          }
+          return;          
           break;
 
         default:
