@@ -50,10 +50,11 @@ block content
                 tbody
                   tr(ng-repeat='user in users')
                     td {{user.name}}
-                    td.pin-green(ng-if='user.location')
+                    td.pin-green(ng-if='user.location==1')
+                      
                       span.glyphicon.glyphicon-home
                       |  At Home
-                    td.pin-red(ng-if='!user.location')
+                    td.pin-red(ng-if='user.location==0')
                       span.glyphicon.glyphicon-road
                       |  Not Home
             

@@ -8,6 +8,7 @@
 import os, time, sys, datetime
 import json
 import threading, queue
+import subprocess
 # if running on the pi import the real GPIO other wise use our fake one
 try:
 	import RPi.GPIO as io
@@ -251,9 +252,28 @@ class ProximityMonitor(threading.Thread):
 			if delta.seconds > 60:
 				self.startdt = datetime.datetime.now()
 				print('Checking for ips')
+				db_open()
 				for user in users:
-					print(user['ip'])
-
+					print(user['name'])
+					if user['proximity_arm']:
+						with open(os.devnull, 'r+') as nul:
+							a = ''
+							proc = subprocess.Popen(['ping',user['ip'], '-n', '1'],stdin=nul, stdout=subprocess.PIPE, stderr=nul)
+							while True:
+								line = proc.stdout.readline()
+								if len(str(line)) > 5:
+									a += str(line.rstrip())
+								else:
+									break
+							if 'Reply from %s: bytes' % user['ip'] in a:
+								cur.execute('UPDATE users SET last_seen=CURRENT_TIMESTAMP, location=1 WHERE id = %d' % user['id'])
+								conn.commit()
+							else:
+								cur.execute('UPDATE users SET location=0 WHERE id=%d AND location!=0' % user['id'])
+								conn.commit()
+					else:
+						print('  No Arm')
+				db_close()
 			#iterate through all ips
 			#for sensor in sensors:
 
@@ -400,6 +420,16 @@ def load_settings():
 		settings = result[0];
 	result = None
 
+
+# loads all users into list
+def load_users():
+	global users
+	cur.execute("SELECT * FROM users")
+	columns = tuple( [d[0] for d in cur.description] )
+	users = []
+	for row in cur:
+		users.append(dict(zip(columns, row)))
+
 #   ######  ######## ######## ##     ## ########      ######  ##    ##  ######  ######## ######## ##     ##
 #  ##    ## ##          ##    ##     ## ##     ##    ##    ##  ##  ##  ##    ##    ##    ##       ###   ###
 #  ##       ##          ##    ##     ## ##     ##    ##         ####   ##          ##    ##       #### ####
@@ -420,7 +450,7 @@ def g_shutdown():
 	if proximity_thread != None:
 		proximity_thread.join()
 	alarm_thread.join()
-	return 'SUCCESS'
+	return 'SHUTDOWN'
 
 def g_restart():
 	db_open()
@@ -433,10 +463,10 @@ def g_restart():
 	# write the restart file, this is only used in testing and then only by start.ps1
 	with open('restart.txt','w') as f:
 		f.write('ss')
-	return 'SUCCESS'
+	return 'SHUTDOWN'
 
 def g_proximity_start():
-	global proximity_thread
+	global proximity_thread, proximity_command_q, proximity_result_q
 	if proximity_thread == None:
 		proximity_thread = ProximityMonitor(command_q=proximity_command_q, result_q=proximity_result_q)
 		proximity_thread.start()
@@ -473,6 +503,7 @@ def g_proximity_shutdown():
 #        ##     ## ##     ## #### ##    ##
 def main(args):
 	global alarm_thread, proximity_thread, time_thread
+	global proximity_command_q, proximity_result_q
 	# Load script settings
 	global script_settings
 	if os.path.exists('settings.json'):
@@ -485,6 +516,7 @@ def main(args):
 	# load house settings
 	db_open()
 	load_settings()
+	load_users()
 	db_close()
 
 	# Create a single input and a single output queue for all alarm monitor threads.
@@ -517,6 +549,7 @@ def main(args):
 	s.listen(backlog)
 	db_open()
 	log('The server is running')
+	print('The server is running')
 	db_close()
 	while 1:
 		client, address = s.accept()
@@ -525,8 +558,13 @@ def main(args):
 		# do something with the data we received
 		if data:
 			line = data.decode()
+			if line == '?':
+				client.close()
+				break
 			try:
 				response = globals()['g_%s' % line]()
+				if response == 'SHUTDOWN':
+					break
 			except:
 				print('No Function named %s' % line)
 				command_q.put(line)
