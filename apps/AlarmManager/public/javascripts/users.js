@@ -5,11 +5,18 @@ var app = angular.module('House', []);
 app.controller(
     "AppController",
     function( $scope, $http, $interval ) {
-        // I am the model for new friends.
-        $scope.newUserName = "";
+        $scope.defaultuser = {
+          "name":"",
+          "email":"",
+          "sms":"",
+          "proximity_arm":false,
+          "notify_email":false,
+          "notify_sms":false,
+          "notify_gcm":false,
+          "ip":""
+        };
+        $scope.newuser = $scope.defaultuser;
         $scope.users = [];
-        $scope.zones = [];
-        $scope.types = [];
         $http.get('api/users').then(function(result) {
           $scope.users = result.data;
         });
@@ -18,34 +25,22 @@ app.controller(
           User
         */
         $scope.addUser = function() {
-          var user = {
-            "name":  $('#addName').val(),
-            "email":  $('#addZone').val(),
-            "sms":  $('#addType').val(),
-            "normal":  $('#addNormal').val(),
-            "gpio":  $('#addGPIO').val(),
-            "enabled":  $('#addEnabled').prop('checked')
-          }
-          var missing = '';
-          for ( f in user ){
-            if ( user[f] == '' ){
-              missing += '<br>' + f;
-            }
-          }
-
-          if ( missing != '' ){
+          if ( $scope.newuser.name == '' ){
             BootstrapDialog.show({
               type: BootstrapDialog.TYPE_WARNING,
-              title: 'All fields are required',
-              message: '<h2>Missing:</h2><blockquote>' + missing + '</blockquote>'
+              title: 'You must supply a name',
+              message: '<h2>Missing:</h2><blockquote>Name</blockquote>'
             });
             return;
           }
 
-          $scope.users.push(user);
+          $scope.users.push($scope.newuser);
           // Add user to db
-          $http.post('api/users',user);
-          user = {};
+          $http.post('api/users',$scope.newuser);
+
+          // Cleanup
+          $scope.newuser = $scope.defaultuser;
+
 
         };
 

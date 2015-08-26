@@ -72,7 +72,57 @@ router.route('/gpio')
     });
   })
 
+  /*========================================================================================================================================
+        User Management
+  */
+  router.route('/users')
+    /* GET all users */
+    .get(function(req, res, next) {
+      models.User.findAll().then(function(users) {
+        res.json(users);
+      });
+    })
+    /* POST add a user */
+    .post(function(req, res, next) {
+      models.User.create(
+        req.body
+      ).then(res.json({ message: 'User created!' }));
+    });
 
+  router.route('/users/:user_id')
+    /* GET one user */
+    .get(function(req, res, next) {
+      models.User.findById(req.params.user_id, function(err, user) {
+        if (err)
+          res.send(err);
+        res.json(user);
+      });
+    })
+    /* PUT update one user */
+    .put(function(req, res, next) {// use our bear model to find the bear we want
+      models.User.findById(req.params.user_id, function(err, user) {
+        if (err)
+          res.send(err);
+        user.name = req.body.name;  // update the users info
+        // save the user
+        user.save(function(err) {
+          if (err)
+            res.send(err);
+          res.json({ message: 'User updated!' });
+        });
+      });
+    })
+    /* DELETE remove one user */
+    .delete(function(req, res, next) {
+      models.User.remove(
+        {
+          _id: req.params.user_id
+        }, function(err, user) {
+          if (err)
+            res.send(err);
+          res.json({ message: 'User deleted' });
+        });
+    });
 
 
 

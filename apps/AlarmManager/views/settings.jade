@@ -11,17 +11,21 @@ block content
             .col-lg-6.no-padding
               table.table
                 tr(ng-repeat='pin in obj2')
-                  td {{pin.sid}}
+                  td
+                    | {{pin.sid}}
                   td.desc
-                    {{pin.name}}
-                  td.pin(class="pin-{{pin.color}}") {{pin.pin}}
+                    | {{pin.name}}
+                  td.pin(class="pin-{{pin.color}}")
+                    | {{pin.pin}}
             .col-lg-6.no-padding
               table.table
                 tr(ng-repeat='pin in obj3')
-                  td.pin(class="pin-{{pin.color}}")  {{pin.pin}}
+                  td.pin(class="pin-{{pin.color}}")
+                    | {{pin.pin}}
                   td.desc
-                    {{pin.name}}
-                  td {{pin.sid}}
+                    | {{pin.name}}
+                  td 
+                    | {{pin.sid}}
     .col-lg-6
       .row      
         // Proximity arm      
@@ -51,12 +55,14 @@ block content
                   tr(ng-repeat='user in users')
                     td {{user.name}}
                     td.pin-green(ng-if='user.location==1')
-                      
                       span.glyphicon.glyphicon-home
                       |  At Home
                     td.pin-red(ng-if='user.location==0')
                       span.glyphicon.glyphicon-road
                       |  Not Home
+                    td.pin-red(ng-if='user.location==null')
+                      span.glyphicon.glyphicon-road
+                      |  Unknown
             
     
         // Time arm      

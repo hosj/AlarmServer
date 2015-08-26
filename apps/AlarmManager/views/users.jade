@@ -18,14 +18,14 @@ block content
           th Status
       tbody
         tr(ng-repeat='user in users')
-          td {{user.zone}}
+          td {{user.name}}
           td 
-            a(ng-click='removeUser( user )') {{user.name}}
-          td {{user.type}}
-          td {{user.GPIO}}
-          td {{user.pin}}
-          td {{user.normal}}
-          td {{user.current}}        
+            a(ng-click='removeUser( user )') {{user.email}}
+          td {{user.sms}}
+          td {{user.proximity_arm}}
+          td {{user.notify_email}}
+          td {{user.notify_sms}}
+          td {{user.ip}}        
           td 
             a(ng-click='removeUser( user )') {{user.enabled}}
     // END: User List.
@@ -42,41 +42,47 @@ block content
           |           
           .modal-body
             form
-              // ZONE
-              .form-group
-                a.pull-right(href='#', data-toggle="modal" data-target="#addZoneModal") Add
-                label.control-label(for='addZone') Zone:
-                |                 
-                select#addZone.form-control
-                  option(ng-repeat='zone in zones',value='{{zone.name}}') {{zone.name}}
-                  
-              // Type
-              .form-group
-                a.pull-right(href='#', data-toggle="modal" data-target="#addTypeModal") Add
-                label.control-label(for='addType') User Type:
-                select#addType.form-control
-                  option(ng-repeat='type in types',value='{{type.name}}') {{type.name}}
-                  
               // Name
               .form-group
-                label.control-label(for='addName') Name:
-                input.form-control#addName(type='input')
-                
-              // Normal
+                label.control-label
+                  | Name:
+                input.form-control(type='input', ng-model='newuser.name')
+                  
+              // Email Address
               .form-group
-                label.control-label(for='addNormal') Normal Output:
-                input.form-control#addNormal(type='input')
-                
-              // GPIO
+                label.control-label
+                  | Email Address:
+                input.form-control#addEmailAddress(type='input', ng-model='newuser.email')
+                  
+              // SMS Address
               .form-group
-                label.control-label(for='addGPIO') GPIO #:
-                input.form-control#addGPIO(type='input')
+                label.control-label
+                  | SMS Address(Email Format):
+                input.form-control(type='input', ng-model='newuser.sms')
                 
-              // Enabled?
+              // IP Address
               .form-group
-                label.control-label(for='addEnabled') Enabled:
+                label.control-label
+                  | IP Address:
+                input.form-control(type='input', ng-model='newuser.ip')
+                
+              // Proximity Arm
+              .form-group
+                label.control-label
+                  | Proximity Arm: 
+                input(type='checkbox', ng-model='newuser.proximity_arm')
+                
+              // Notify by Email
+              .form-group
+                label.control-label Notify by Email:
                 | 
-                input#addEnabled(type='checkbox')
+                input(type='checkbox', ng-model='newuser.notify_email')
+                
+              // Notify by SMS?
+              .form-group
+                label.control-label Notify by SMS:
+                | 
+                input(type='checkbox', ng-model='newuser.notify_sms')
 
           .modal-footer
             button.btn.btn-default(type='button', data-dismiss='modal') Close

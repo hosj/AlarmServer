@@ -249,13 +249,16 @@ class ProximityMonitor(threading.Thread):
 			delta = datetime.datetime.now() - self.startdt
 
 
-			if delta.seconds > 60:
+			if delta.seconds > 10:
 				self.startdt = datetime.datetime.now()
 				print('Checking for ips')
 				db_open()
+				gone = 0
+				total_prox = 0
 				for user in users:
 					print(user['name'])
 					if user['proximity_arm']:
+						total_prox += 1
 						with open(os.devnull, 'r+') as nul:
 							a = ''
 							proc = subprocess.Popen(['ping',user['ip'], '-n', '1'],stdin=nul, stdout=subprocess.PIPE, stderr=nul)
@@ -271,8 +274,16 @@ class ProximityMonitor(threading.Thread):
 							else:
 								cur.execute('UPDATE users SET location=0 WHERE id=%d AND location!=0' % user['id'])
 								conn.commit()
+								gone += 1
 					else:
 						print('  No Arm')
+
+				if gone == total_prox:
+					print('Armed system')
+					# Arm system
+
+					# Send Notifications
+
 				db_close()
 			#iterate through all ips
 			#for sensor in sensors:
@@ -474,6 +485,7 @@ def g_proximity_start():
 		cur.execute("UPDATE houses SET proximity_arm = 1")
 		conn.commit()
 		load_settings()
+		load_users()
 		db_close()
 		return 'SUCCESS'
 	else:
